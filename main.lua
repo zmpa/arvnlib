@@ -1,5 +1,17 @@
-local cloneref = cloneref or function(o) return o end
-local function service(name) return cloneref(game:GetService(name)) end
+local rawCloneref = cloneref
+local function cloneref(o)
+	if rawCloneref then
+		local ok, c = pcall(rawCloneref, o)
+		if ok and c ~= nil then return c end
+	end
+	return o
+end
+local function service(name)
+	local raw = game:GetService(name)
+	local c = cloneref(raw)
+	local ok = pcall(function() return c.ClassName, c:GetChildren() end)
+	return ok and c or raw
+end
 local Players = service("Players")
 local RunService = service("RunService")
 local UIS = service("UserInputService")
@@ -3769,7 +3781,7 @@ function D.column(content, i, n)
 end
 
 function D.clearCard(c)
-	for _, ch in ipairs(c:GetChildren()) do
+	for _, ch in ipairs(c and c:GetChildren() or {}) do
 		if ch:IsA("GuiObject") then ch:Destroy() end
 	end
 end
@@ -9036,7 +9048,7 @@ end
 
 local function playerNames(excludeSelf)
 	local t = {}
-	for _, p in ipairs(Players:GetPlayers()) do
+	for _, p in ipairs(Players:GetPlayers() or {}) do
 		if not (excludeSelf and p == LP) then t[#t + 1] = p.Name end
 	end
 	table.sort(t, function(x, y) return string.lower(x) < string.lower(y) end)
